@@ -1,0 +1,19 @@
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <a href="/" class="footer-logo">Блог<span class="logo-dot">.</span></a>
+      <p class="footer-text">Простий блог &mdash; навчальний проект</p>
+      <nav class="footer-nav">
+        <a href="/posts">Записи</a>
+        <% if (currentUser) { %>
+          <a href="/posts/new">Написати</a>
+          <a href="/profile">Профіль</a>
+        <% } else { %>
+          <a href="/auth/login">Вхід</a>
+          <a href="/auth/register">Реєстрація</a>
+        <% } %>
+      </nav>
+    </div>
+  </footer>
+  <script src="/js/main.js"></script>
+</body>
+</html>

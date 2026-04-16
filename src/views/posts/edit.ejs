@@ -1,0 +1,56 @@
+<%- include('../partials/header') %>
+
+<div class="form-page">
+  <h1 class="form-page-title">Редагувати запис</h1>
+  <p class="form-page-subtitle">Вносьте зміни до вашого запису</p>
+
+  <% if (errors && errors.length > 0) { %>
+    <div class="error-list">
+      <% errors.forEach(e => { %><div class="error-item"><%= e.msg %></div><% }) %>
+    </div>
+  <% } %>
+
+  <div class="form-card">
+    <form action="/posts/<%= post.slug %>/edit" method="POST" enctype="multipart/form-data">
+      <div class="form-group">
+        <label class="form-label" for="title">Заголовок *</label>
+        <input class="form-control" type="text" id="title" name="title"
+               value="<%= post.title %>" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="cover_image">Обкладинка</label>
+        <div class="file-input-wrapper">
+          <label class="file-input-label">
+            📷 <span class="file-label-text">Замінити обкладинку</span>
+            <input type="file" name="cover_image" id="cover_image" accept="image/*">
+          </label>
+        </div>
+        <% if (post.cover_image) { %>
+          <div class="current-image mt-1">
+            <img src="<%= post.cover_image %>" alt="Поточна обкладинка">
+            <div class="form-hint">Поточна обкладинка (залиште поле порожнім, щоб не змінювати)</div>
+          </div>
+        <% } %>
+      </div>
+
+      <hr class="form-divider">
+
+      <div class="form-group">
+        <label class="form-label" for="content">Зміст *</label>
+        <textarea class="form-control" id="content" name="content" rows="16" required><%= post.content %></textarea>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Зберегти зміни</button>
+        <a href="/posts/<%= post.slug %>" class="btn btn-outline">Скасувати</a>
+        <form action="/posts/<%= post.slug %>/delete" method="POST" class="inline-form" style="margin-left:auto">
+          <button type="submit" class="btn btn-danger"
+            data-confirm="Видалити цей запис? Цю дію не можна скасувати.">Видалити запис</button>
+        </form>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>

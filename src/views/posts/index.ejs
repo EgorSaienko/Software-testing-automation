@@ -1,0 +1,75 @@
+<%- include('../partials/header') %>
+
+<div class="page-hero">
+  <div class="page-hero-inner">
+    <h1>Записи</h1>
+    <p>Думки, ідеї та статті від нашої спільноти</p>
+    <form action="/posts" method="GET" class="search-bar">
+      <input class="search-input" type="text" name="search"
+             placeholder="Пошук записів..." value="<%= search %>">
+      <button type="submit" class="search-btn">Знайти</button>
+      <% if (search) { %><a href="/posts" class="search-btn" style="background:rgba(255,255,255,0.2)">✕</a><% } %>
+    </form>
+  </div>
+</div>
+
+<div class="container">
+  <% if (search) { %>
+    <p class="text-muted mb-1">Результати пошуку для "<strong><%= search %></strong>": <%= posts.length %> <%= posts.length === 1 ? 'запис' : 'записів' %></p>
+  <% } %>
+
+  <% if (posts.length === 0) { %>
+    <div class="empty-state">
+      <div class="empty-state-icon">✍️</div>
+      <h2><%= search ? 'Нічого не знайдено' : 'Записів ще немає' %></h2>
+      <p class="text-muted"><%= search ? 'Спробуйте інший запит.' : 'Станьте першим, хто напише!' %></p>
+      <% if (currentUser && !search) { %>
+        <a href="/posts/new" class="btn btn-primary mt-2">Написати перший запис</a>
+      <% } %>
+    </div>
+  <% } else { %>
+    <div class="posts-grid">
+      <% posts.forEach(post => { %>
+        <article class="post-card">
+          <div class="post-card-image">
+            <% if (post.cover_image) { %>
+              <img src="<%= post.cover_image %>" alt="<%= post.title %>">
+            <% } else { %>
+              <div class="post-card-image-placeholder">📝</div>
+            <% } %>
+          </div>
+          <div class="post-card-body">
+            <div class="post-card-meta">
+              <a href="/profile/users/<%= post.username %>"><%= post.username %></a>
+              <span>·</span>
+              <span><%= post.formattedDate %></span>
+            </div>
+            <h2 class="post-card-title">
+              <a href="/posts/<%= post.slug %>"><%= post.title %></a>
+            </h2>
+            <p class="post-card-excerpt"><%= post.excerpt %></p>
+            <div class="post-card-footer">
+              <span>💬 <%= post.comment_count %></span>
+              <a href="/posts/<%= post.slug %>" class="btn btn-sm btn-outline">Читати →</a>
+            </div>
+          </div>
+        </article>
+      <% }) %>
+    </div>
+
+    <% if (totalPages > 1) { %>
+      <nav class="pagination">
+        <a href="/posts?page=<%= page - 1 %><%= search ? '&search=' + search : '' %>"
+           class="page-link <%= page <= 1 ? 'disabled' : '' %>">←</a>
+        <% for (let i = 1; i <= totalPages; i++) { %>
+          <a href="/posts?page=<%= i %><%= search ? '&search=' + search : '' %>"
+             class="page-link <%= i === page ? 'active' : '' %>"><%= i %></a>
+        <% } %>
+        <a href="/posts?page=<%= page + 1 %><%= search ? '&search=' + search : '' %>"
+           class="page-link <%= page >= totalPages ? 'disabled' : '' %>">→</a>
+      </nav>
+    <% } %>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

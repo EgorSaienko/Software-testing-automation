@@ -1,0 +1,120 @@
+<%- include('../partials/header') %>
+
+<div class="post-page">
+  <article>
+    <header class="post-header">
+      <h1 class="post-title"><%= post.title %></h1>
+      <div class="post-meta-bar">
+        <a href="/profile/users/<%= post.username %>" class="post-author-link">
+          <% if (post.avatar) { %>
+            <img src="<%= post.avatar %>" alt="<%= post.username %>" class="avatar avatar-sm">
+          <% } else { %>
+            <div class="avatar avatar-sm avatar-placeholder"><%= post.username[0].toUpperCase() %></div>
+          <% } %>
+          <%= post.username %>
+        </a>
+        <span class="meta-sep">·</span>
+        <span><%= post.formattedDate %></span>
+        <span class="meta-sep">·</span>
+        <span>💬 <%= comments.length %> коментар<%= comments.length === 1 ? '' : 'ів' %></span>
+
+        <% if (currentUser && currentUser.id === post.user_id) { %>
+          <div class="post-actions">
+            <a href="/posts/<%= post.slug %>/edit" class="btn btn-sm btn-outline">Редагувати</a>
+            <form action="/posts/<%= post.slug %>/delete" method="POST" class="inline-form">
+              <button type="submit" class="btn btn-danger"
+                data-confirm="Видалити цей запис? Цю дію не можна скасувати.">Видалити</button>
+            </form>
+          </div>
+        <% } %>
+      </div>
+    </header>
+
+    <% if (post.cover_image) { %>
+      <img src="<%= post.cover_image %>" alt="<%= post.title %>" class="post-cover">
+    <% } %>
+
+    <div class="post-content">
+      <%- post.content.replace(/\n/g, '<br>') %>
+    </div>
+  </article>
+
+  <!-- COMMENTS -->
+  <section class="comments-section" id="comments">
+    <h2 class="section-title">Коментарі (<%= comments.length %>)</h2>
+
+    <% if (errors && errors.length > 0) { %>
+      <div class="error-list">
+        <% errors.forEach(e => { %><div class="error-item"><%= e.msg %></div><% }) %>
+      </div>
+    <% } %>
+
+    <% if (comments.length === 0) { %>
+      <p class="text-muted" style="margin-bottom:1.5rem;">Коментарів ще немає. Будьте першим!</p>
+    <% } %>
+
+    <% comments.forEach(comment => { %>
+      <div class="comment">
+        <div class="comment-avatar-wrap">
+          <% if (comment.avatar) { %>
+            <img src="<%= comment.avatar %>" alt="<%= comment.username %>" class="avatar avatar-md">
+          <% } else { %>
+            <div class="avatar avatar-md avatar-placeholder"><%= comment.username[0].toUpperCase() %></div>
+          <% } %>
+        </div>
+        <div class="comment-body">
+          <div class="comment-header">
+            <a href="/profile/users/<%= comment.username %>" class="comment-author"><%= comment.username %></a>
+            <span class="comment-date"><%= comment.formattedDate %></span>
+            <% if (currentUser && currentUser.id === comment.user_id) { %>
+              <form action="/posts/<%= post.slug %>/comments/<%= comment.id %>/delete" method="POST" class="inline-form comment-delete">
+                <button type="submit" class="btn-ghost-sm"
+                  data-confirm="Видалити коментар?">✕</button>
+              </form>
+            <% } %>
+          </div>
+          <p class="comment-text"><%= comment.content %></p>
+        </div>
+      </div>
+    <% }) %>
+
+    <% if (currentUser) { %>
+      <div class="comment-form-wrapper">
+        <p class="comment-form-title">Залишити коментар</p>
+        <form action="/posts/<%= post.slug %>/comments" method="POST">
+          <div class="form-group">
+            <textarea class="form-control" name="content" rows="4"
+                      placeholder="Напишіть ваш коментар..." required></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary">Опублікувати коментар</button>
+        </form>
+      </div>
+    <% } else { %>
+      <div class="login-prompt">
+        <a href="/auth/login">Увійдіть</a> або <a href="/auth/register">зареєструйтесь</a>, щоб залишити коментар.
+      </div>
+    <% } %>
+  </section>
+
+  <!-- RELATED POSTS -->
+  <% if (relatedPosts.length > 0) { %>
+    <section class="related-posts">
+      <h3 class="section-title" style="font-size:1.2rem;">Також читайте</h3>
+      <div class="related-grid">
+        <% relatedPosts.forEach(rp => { %>
+          <div class="related-card">
+            <% if (rp.cover_image) { %>
+              <img src="<%= rp.cover_image %>" alt="<%= rp.title %>" class="related-card-img">
+            <% } %>
+            <div class="related-card-body">
+              <h4 class="related-card-title"><a href="/posts/<%= rp.slug %>"><%= rp.title %></a></h4>
+              <div class="related-card-meta"><%= rp.username %> · <%= rp.formattedDate %></div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </section>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

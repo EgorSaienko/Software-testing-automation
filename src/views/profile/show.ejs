@@ -1,0 +1,74 @@
+<%- include('../partials/header') %>
+
+<div class="profile-page">
+  <div class="profile-header">
+    <div class="profile-avatar-wrap">
+      <% if (user.avatar) { %>
+        <img src="<%= user.avatar %>" alt="<%= user.username %>" class="avatar avatar-xl">
+      <% } else { %>
+        <div class="avatar avatar-xl avatar-placeholder"><%= user.username[0].toUpperCase() %></div>
+      <% } %>
+    </div>
+    <div class="profile-info">
+      <h1 class="profile-username"><%= user.username %></h1>
+      <% if (user.bio) { %>
+        <p class="profile-bio"><%= user.bio %></p>
+      <% } else if (isOwn) { %>
+        <p class="profile-bio text-muted">Додайте опис у налаштуваннях профілю.</p>
+      <% } %>
+      <div class="profile-meta">
+        На платформі з <%= new Date(user.created_at * 1000).toLocaleDateString('uk-UA', { month: 'long', year: 'numeric' }) %>
+        &nbsp;·&nbsp; <%= posts.length %> запис<%= posts.length === 1 ? '' : 'ів' %>
+      </div>
+      <% if (isOwn) { %>
+        <div class="profile-actions">
+          <a href="/profile/edit" class="btn btn-sm btn-outline">Редагувати профіль</a>
+          <a href="/auth/change-password" class="btn btn-sm btn-outline">Змінити пароль</a>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <h2 class="profile-posts-title">
+    <%= isOwn ? 'Мої записи' : `Записи ${user.username}` %>
+  </h2>
+
+  <% if (posts.length === 0) { %>
+    <div class="empty-state">
+      <div class="empty-state-icon">✍️</div>
+      <h2><%= isOwn ? 'Ви ще нічого не написали' : 'Записів ще немає' %></h2>
+      <% if (isOwn) { %>
+        <a href="/posts/new" class="btn btn-primary mt-2">Написати перший запис</a>
+      <% } %>
+    </div>
+  <% } else { %>
+    <div class="profile-posts-list">
+      <% posts.forEach(post => { %>
+        <div class="profile-post-row">
+          <% if (post.cover_image) { %>
+            <img src="<%= post.cover_image %>" alt="" style="width:80px;height:54px;object-fit:cover;border-radius:4px;flex-shrink:0;">
+          <% } %>
+          <div class="profile-post-info">
+            <div class="profile-post-title">
+              <a href="/posts/<%= post.slug %>"><%= post.title %></a>
+            </div>
+            <div class="profile-post-meta">
+              <%= post.formattedDate %> &nbsp;·&nbsp; 💬 <%= post.comment_count %>
+            </div>
+          </div>
+          <% if (isOwn) { %>
+            <div class="profile-post-actions">
+              <a href="/posts/<%= post.slug %>/edit" class="btn btn-sm btn-outline">Редагувати</a>
+              <form action="/posts/<%= post.slug %>/delete" method="POST" class="inline-form">
+                <button type="submit" class="btn btn-danger"
+                  data-confirm="Видалити цей запис?">Видалити</button>
+              </form>
+            </div>
+          <% } %>
+        </div>
+      <% }) %>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/footer') %>

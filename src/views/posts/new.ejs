@@ -1,0 +1,50 @@
+<%- include('../partials/header') %>
+
+<div class="form-page">
+  <h1 class="form-page-title">Новий запис</h1>
+  <p class="form-page-subtitle">Поділіться своїми думками зі світом</p>
+
+  <% if (errors && errors.length > 0) { %>
+    <div class="error-list">
+      <% errors.forEach(e => { %><div class="error-item"><%= e.msg %></div><% }) %>
+    </div>
+  <% } %>
+
+  <div class="form-card">
+    <form action="/posts" method="POST" enctype="multipart/form-data">
+      <div class="form-group">
+        <label class="form-label" for="title">Заголовок *</label>
+        <input class="form-control" type="text" id="title" name="title"
+               value="<%= typeof old !== 'undefined' && old.title ? old.title : '' %>"
+               placeholder="Заголовок вашого запису" required>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="cover_image">Обкладинка</label>
+        <div class="file-input-wrapper">
+          <label class="file-input-label">
+            📷 <span class="file-label-text">Обрати зображення (макс. 5MB)</span>
+            <input type="file" name="cover_image" id="cover_image" accept="image/*">
+          </label>
+        </div>
+      </div>
+
+      <hr class="form-divider">
+
+      <div class="form-group">
+        <label class="form-label" for="content">Зміст *</label>
+        <textarea class="form-control" id="content" name="content" rows="16"
+                  placeholder="Напишіть ваш запис тут. Підтримується HTML та звичайний текст."
+                  required><%= typeof old !== 'undefined' && old.content ? old.content : '' %></textarea>
+        <div class="form-hint">Ви можете використовувати заголовки (#, ##), списки (- пункт), та **жирний текст**</div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Опублікувати запис</button>
+        <a href="/posts" class="btn btn-outline">Скасувати</a>
+      </div>
+    </form>
+  </div>
+</div>
+
+<%- include('../partials/footer') %>
