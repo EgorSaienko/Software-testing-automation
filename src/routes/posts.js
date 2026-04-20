@@ -8,7 +8,7 @@ const db = require('../database');
 const { requireAuth } = require('../middleware/auth');
 
 const uploadsDir = path.join(__dirname, '..', 'public', 'uploads');
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+if (!fs.existsSync(uploadsDir)) {fs.mkdirSync(uploadsDir, { recursive: true });}
 
 const storage = multer.diskStorage({
   destination: uploadsDir,
@@ -22,8 +22,8 @@ const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 function slugify(text) {
   return text.toString().toLowerCase()
     .replace(/\s+/g, '-')
-    .replace(/[^\w\-а-яёіїє]+/gi, '')
-    .replace(/\-\-+/g, '-')
+    .replace(/[^\w-а-яёіїє]+/gi, '')
+    .replace(/--+/g, '-')
     .replace(/^-+/, '').replace(/-+$/, '')
     + '-' + Date.now();
 }
@@ -81,11 +81,11 @@ router.post('/', requireAuth, upload.single('cover_image'), [
   }
 
   const { title, content } = req.body;
-  const excerpt = content.replace(/[#*\[\]]/g, '').substring(0, 200) + '...';
+  const excerpt = content.replace(/[#*[\]]/g, '').substring(0, 200) + '...';
   const slug = slugify(title);
   const cover_image = req.file ? `/uploads/${req.file.filename}` : null;
 
-  const result = db.prepare(
+  const _result = db.prepare(
     'INSERT INTO posts (title, slug, content, excerpt, cover_image, user_id) VALUES (?, ?, ?, ?, ?, ?)'
   ).run(title, slug, content, excerpt, cover_image, req.session.userId);
 
@@ -129,7 +129,7 @@ router.get('/:slug', (req, res) => {
 // GET /posts/:slug/edit
 router.get('/:slug/edit', requireAuth, (req, res) => {
   const post = db.prepare('SELECT * FROM posts WHERE slug = ?').get(req.params.slug);
-  if (!post) return res.status(404).render('404', { title: 'Не знайдено' });
+  if (!post) {return res.status(404).render('404', { title: 'Не знайдено' });}
   if (post.user_id !== req.session.userId) {
     req.flash('error', 'Ви не маєте прав редагувати цей запис.');
     return res.redirect(`/posts/${req.params.slug}`);
@@ -143,7 +143,7 @@ router.post('/:slug/edit', requireAuth, upload.single('cover_image'), [
   body('content').trim().isLength({ min: 10 }).withMessage('Зміст: мінімум 10 символів'),
 ], (req, res) => {
   const post = db.prepare('SELECT * FROM posts WHERE slug = ?').get(req.params.slug);
-  if (!post) return res.status(404).render('404', { title: 'Не знайдено' });
+  if (!post) {return res.status(404).render('404', { title: 'Не знайдено' });}
   if (post.user_id !== req.session.userId) {
     req.flash('error', 'Ви не маєте прав редагувати цей запис.');
     return res.redirect(`/posts/${req.params.slug}`);
@@ -155,7 +155,7 @@ router.post('/:slug/edit', requireAuth, upload.single('cover_image'), [
   }
 
   const { title, content } = req.body;
-  const excerpt = content.replace(/[#*\[\]]/g, '').substring(0, 200) + '...';
+  const excerpt = content.replace(/[#*[\]]/g, '').substring(0, 200) + '...';
   const cover_image = req.file ? `/uploads/${req.file.filename}` : post.cover_image;
   const updated_at = Math.floor(Date.now() / 1000);
 
@@ -169,7 +169,7 @@ router.post('/:slug/edit', requireAuth, upload.single('cover_image'), [
 // POST /posts/:slug/delete
 router.post('/:slug/delete', requireAuth, (req, res) => {
   const post = db.prepare('SELECT * FROM posts WHERE slug = ?').get(req.params.slug);
-  if (!post) return res.status(404).render('404', { title: 'Не знайдено' });
+  if (!post) {return res.status(404).render('404', { title: 'Не знайдено' });}
   if (post.user_id !== req.session.userId) {
     req.flash('error', 'Ви не маєте прав видаляти цей запис.');
     return res.redirect(`/posts/${req.params.slug}`);
@@ -184,7 +184,7 @@ router.post('/:slug/comments', requireAuth, [
   body('content').trim().isLength({ min: 1, max: 2000 }).withMessage('Коментар не може бути порожнім (макс. 2000 символів)'),
 ], (req, res) => {
   const post = db.prepare('SELECT * FROM posts WHERE slug = ?').get(req.params.slug);
-  if (!post) return res.status(404).render('404', { title: 'Не знайдено' });
+  if (!post) {return res.status(404).render('404', { title: 'Не знайдено' });}
 
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -207,7 +207,7 @@ router.post('/:slug/comments', requireAuth, [
 // POST /posts/:slug/comments/:id/delete
 router.post('/:slug/comments/:id/delete', requireAuth, (req, res) => {
   const comment = db.prepare('SELECT * FROM comments WHERE id = ?').get(req.params.id);
-  if (!comment) return res.redirect(`/posts/${req.params.slug}`);
+  if (!comment) {return res.redirect(`/posts/${req.params.slug}`);}
   if (comment.user_id !== req.session.userId) {
     req.flash('error', 'Ви не маєте прав видаляти цей коментар.');
     return res.redirect(`/posts/${req.params.slug}`);
