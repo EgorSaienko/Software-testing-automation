@@ -10,7 +10,7 @@ const app = express();
 
 // Ensure data dir exists
 const dataDir = path.join(__dirname, '..', 'data');
-if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
+if (!fs.existsSync(dataDir)) {fs.mkdirSync(dataDir, { recursive: true });}
 
 // View engine
 app.set('view engine', 'ejs');

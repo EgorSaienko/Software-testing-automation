@@ -8,7 +8,7 @@ const db = require('../database');
 const { requireAuth } = require('../middleware/auth');
 
 const uploadsDir = path.join(__dirname, '..', 'public', 'uploads');
-if (!fs.existsSync(uploadsDir)) fs.mkdirSync(uploadsDir, { recursive: true });
+if (!fs.existsSync(uploadsDir)) {fs.mkdirSync(uploadsDir, { recursive: true });}
 
 const storage = multer.diskStorage({
   destination: uploadsDir,
@@ -70,7 +70,7 @@ router.post('/edit', requireAuth, upload.single('avatar'), [
 // GET /profile/users/:username - public profile
 router.get('/users/:username', (req, res) => {
   const user = db.prepare('SELECT id, username, bio, avatar, created_at FROM users WHERE username = ?').get(req.params.username);
-  if (!user) return res.status(404).render('404', { title: 'Не знайдено' });
+  if (!user) {return res.status(404).render('404', { title: 'Не знайдено' });}
 
   const posts = db.prepare(`
     SELECT p.*, (SELECT COUNT(*) FROM comments c WHERE c.post_id = p.id) as comment_count

@@ -18,7 +18,7 @@ router.post('/register', redirectIfAuth, [
   body('email').isEmail().normalizeEmail().withMessage('Введіть коректний email'),
   body('password').isLength({ min: 6 }).withMessage('Пароль: мінімум 6 символів'),
   body('confirmPassword').custom((val, { req }) => {
-    if (val !== req.body.password) throw new Error('Паролі не співпадають');
+    if (val !== req.body.password) {throw new Error('Паролі не співпадають');}
     return true;
   }),
 ], (req, res) => {
@@ -149,7 +149,7 @@ router.get('/reset-password/:token', redirectIfAuth, (req, res) => {
 router.post('/reset-password/:token', redirectIfAuth, [
   body('password').isLength({ min: 6 }).withMessage('Пароль: мінімум 6 символів'),
   body('confirmPassword').custom((val, { req }) => {
-    if (val !== req.body.password) throw new Error('Паролі не співпадають');
+    if (val !== req.body.password) {throw new Error('Паролі не співпадають');}
     return true;
   }),
 ], (req, res) => {
@@ -180,7 +180,7 @@ router.post('/change-password', requireAuth, [
   body('currentPassword').notEmpty().withMessage('Введіть поточний пароль'),
   body('newPassword').isLength({ min: 6 }).withMessage('Новий пароль: мінімум 6 символів'),
   body('confirmPassword').custom((val, { req }) => {
-    if (val !== req.body.newPassword) throw new Error('Паролі не співпадають');
+    if (val !== req.body.newPassword) {throw new Error('Паролі не співпадають');}
     return true;
   }),
 ], (req, res) => {

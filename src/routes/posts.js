@@ -85,7 +85,7 @@ router.post('/', requireAuth, upload.single('cover_image'), [
   const slug = slugify(title);
   const cover_image = req.file ? `/uploads/${req.file.filename}` : null;
 
-  const _result = db.prepare(
+  db.prepare(
     'INSERT INTO posts (title, slug, content, excerpt, cover_image, user_id) VALUES (?, ?, ?, ?, ?, ?)'
   ).run(title, slug, content, excerpt, cover_image, req.session.userId);
 
