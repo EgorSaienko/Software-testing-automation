@@ -7,123 +7,153 @@ on:
     branches: [ "main", "master" ]
 
 jobs:
-  test:
+  # ── Job 1: Unit Tests ────────────────────────────────────────────────────
+  unit-tests:
     name: Unit Tests (Jest)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - run: npm install
+        with: { node-version: '20', cache: 'npm' }
+      - run: npm install --ignore-scripts
       - run: npm test
       - uses: actions/upload-artifact@v4
         if: always()
-        with:
-          name: jest-coverage
-          path: coverage/
-          retention-days: 7
+        with: { name: jest-coverage, path: coverage/, retention-days: 7 }
 
+  # ── Job 2: Linting ───────────────────────────────────────────────────────
   lint:
     name: Code Style (ESLint)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
+        with: { node-version: '20', cache: 'npm' }
       - run: npm install --ignore-scripts
       - run: npm run lint
 
+  # ── Job 3: Code Quality ──────────────────────────────────────────────────
   security:
     name: Code Quality & Security
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: ajinabraham/njsscan-action@master
-        with:
-          args: 'src/ --sarif --output results.sarif || true'
+        with: { args: 'src/ --sarif --output results.sarif || true' }
       - uses: github/codeql-action/upload-sarif@v3
         if: always()
-        with:
-          sarif_file: results.sarif
+        with: { sarif_file: results.sarif }
         continue-on-error: true
       - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
+        with: { node-version: '20' }
       - run: npm install --ignore-scripts
       - run: npm audit --audit-level=high || true
       - run: npx jscpd src/ --min-lines 5 --min-tokens 50 --reporters console || true
 
-  e2e-selenium:
+  # ── Job 4: Selenium IDE ──────────────────────────────────────────────────
+  e2e-selenium-ide:
     name: E2E Tests (Selenium IDE)
     runs-on: ubuntu-latest
-    needs: [test]
+    needs: [unit-tests]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - run: |
-          npm install
-          npm rebuild better-sqlite3
+        with: { node-version: '20', cache: 'npm' }
+      - run: npm install --ignore-scripts
       - run: npm install -g selenium-side-runner
       - uses: nanasess/setup-chromedriver@v2
       - name: Start app
         run: nohup node src/app.js & sleep 3
-        env:
-          PORT: 3000
-          SESSION_SECRET: ci-secret
-      - run: selenium-side-runner --base-url http://localhost:3000 --browser chrome --output-directory selenium-results selenium-tests/blog-app.side
+        env: { PORT: 3000, SESSION_SECRET: ci-secret }
+      - run: selenium-side-runner --base-url http://localhost:3000 --browser chrome --output-directory selenium-ide-results selenium-tests/blog-app.side
         continue-on-error: true
       - uses: actions/upload-artifact@v4
         if: always()
-        with:
-          name: selenium-results
-          path: selenium-results/
+        with: { name: selenium-ide-results, path: selenium-ide-results/ }
 
+  # ── Job 5: Robot Framework ───────────────────────────────────────────────
   e2e-robot:
     name: Keyword-Driven Tests (Robot Framework)
     runs-on: ubuntu-latest
-    needs: [test]
+    needs: [unit-tests]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+        with: { python-version: '3.12' }
       - run: pip install -r robot-tests/requirements.txt
       - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-      - run: |
-          npm install
-          npm rebuild better-sqlite3
+        with: { node-version: '20' }
+      - run: npm install --ignore-scripts
       - uses: browser-actions/setup-chrome@v1
       - uses: nanasess/setup-chromedriver@v2
-      - name: Start blog app
+      - name: Start app
+        run: nohup node src/app.js & sleep 3
+        env: { PORT: 3000, SESSION_SECRET: ci-robot-secret, NODE_ENV: test }
+      - run: robot --outputdir robot-results --variable BASE_URL:http://localhost:3000 --variable BROWSER:headlesschrome robot-tests/tests/
+        continue-on-error: true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: robot-results, path: robot-results/, retention-days: 7 }
+
+  # ── Job 6: Selenium WebDriver (Page Object) ──────────────────────────────
+  e2e-webdriver:
+    name: E2E Tests (Selenium WebDriver + Page Object)
+    runs-on: ubuntu-latest
+    needs: [unit-tests]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install app dependencies
+        run: npm install --ignore-scripts
+
+      - name: Install Selenium test dependencies
+        run: |
+          cd selenium-wd-tests
+          npm install
+
+      - name: Setup Chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Setup ChromeDriver
+        uses: nanasess/setup-chromedriver@v2
+
+      - name: Start blog application
         run: |
           nohup node src/app.js &
           sleep 3
           curl -f http://localhost:3000 || exit 1
         env:
           PORT: 3000
-          SESSION_SECRET: ci-robot-secret
+          SESSION_SECRET: ci-webdriver-secret
           NODE_ENV: test
-      - name: Run Robot Framework tests
+
+      - name: Run Selenium WebDriver tests
         run: |
-          robot \
-            --outputdir robot-results \
-            --variable BASE_URL:http://localhost:3000 \
-            --variable BROWSER:headlesschrome \
-            --loglevel INFO \
-            robot-tests/tests/
+          cd selenium-wd-tests
+          npm test
+        env:
+          BASE_URL: http://localhost:3000
+          CI: true
         continue-on-error: true
-      - uses: actions/upload-artifact@v4
+
+      - name: Upload screenshots
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: robot-results
-          path: robot-results/
+          name: selenium-wd-screenshots
+          path: selenium-wd-tests/screenshots/
+          retention-days: 7
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: selenium-wd-results
+          path: selenium-wd-tests/test-results/
           retention-days: 7

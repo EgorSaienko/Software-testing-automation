@@ -1,0 +1,23 @@
+{
+  "name": "blog-app-selenium-tests",
+  "version": "1.0.0",
+  "description": "Selenium WebDriver tests for blog application using Page Object pattern",
+  "scripts": {
+    "test": "jest --testPathPattern=selenium-tests/tests --runInBand --forceExit",
+    "test:auth": "jest --testPathPattern=selenium-tests/tests/auth --runInBand --forceExit",
+    "test:posts": "jest --testPathPattern=selenium-tests/tests/posts --runInBand --forceExit",
+    "test:profile": "jest --testPathPattern=selenium-tests/tests/profile --runInBand --forceExit"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "testTimeout": 30000,
+    "testMatch": ["**/selenium-tests/tests/**/*.test.js"]
+  },
+  "dependencies": {
+    "selenium-webdriver": "^4.27.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "chromedriver": "^131.0.0"
+  }
+}
