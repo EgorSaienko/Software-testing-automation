@@ -16,7 +16,7 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-      - run: npm install --ignore-scripts
+      - run: npm install
       - run: npm test
       - uses: actions/upload-artifact@v4
         if: always()
@@ -67,7 +67,9 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
-      - run: npm install --ignore-scripts
+      - run: |
+          npm install
+          npm rebuild better-sqlite3
       - run: npm install -g selenium-side-runner
       - uses: nanasess/setup-chromedriver@v2
       - name: Start app
@@ -96,7 +98,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - run: npm install --ignore-scripts
+      - run: |
+          npm install
+          npm rebuild better-sqlite3
       - uses: browser-actions/setup-chrome@v1
       - uses: nanasess/setup-chromedriver@v2
       - name: Start blog app
