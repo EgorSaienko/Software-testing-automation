@@ -11,83 +11,101 @@ jobs:
   test:
     name: Unit Tests (Jest)
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js 20
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-
-      - name: Install dependencies
-        run: npm install --ignore-scripts
-
-      - name: Run unit tests with coverage
-        run: npm test
-
-      - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+      - run: npm install --ignore-scripts
+      - run: npm test
+      - uses: actions/upload-artifact@v4
         if: always()
         with:
           name: coverage-report
           path: coverage/
           retention-days: 7
 
-  # ── Job 2: Linting (ESLint) ──────────────────────────────────────────────
+  # ── Job 2: Linting ───────────────────────────────────────────────────────
   lint:
     name: Code Style (ESLint)
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm install --ignore-scripts
+      - run: npm run lint
 
-      - name: Setup Node.js 20
+  # ── Job 3: Code Quality ──────────────────────────────────────────────────
+  security:
+    name: Code Quality & Security
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ajinabraham/njsscan-action@master
+        with:
+          args: 'src/ --sarif --output results.sarif || true'
+      - uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: results.sarif
+        continue-on-error: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install --ignore-scripts
+      - run: npm audit --audit-level=high || true
+      - run: npx jscpd src/ --min-lines 5 --min-tokens 50 --reporters console || true
+
+  # ── Job 4: Selenium E2E Tests ─────────────────────────────────────────────
+  e2e:
+    name: E2E Tests (Selenium IDE)
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
 
-      - name: Install dependencies
+      - name: Install app dependencies
         run: npm install --ignore-scripts
 
-      - name: Run ESLint
-        run: npm run lint
+      - name: Install Selenium IDE runner
+        run: npm install -g selenium-side-runner
 
-  # ── Job 3: Code Quality (njsscan) ────────────────────────────────────────
-  security:
-    name: Code Quality & Security (njsscan)
-    runs-on: ubuntu-latest
+      - name: Install ChromeDriver
+        uses: nanasess/setup-chromedriver@v2
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - name: Start blog app in background
+        run: |
+          nohup node src/app.js &
+          sleep 3
+          curl -f http://localhost:3000 || exit 1
+        env:
+          PORT: 3000
+          SESSION_SECRET: ci-test-secret-key
+          NODE_ENV: test
 
-      - name: Run njsscan (static analysis)
-        uses: ajinabraham/njsscan-action@master
-        with:
-          args: 'src/ --sarif --output results.sarif || true'
-
-      - name: Upload SARIF results
-        uses: github/codeql-action/upload-sarif@v3
-        if: always()
-        with:
-          sarif_file: results.sarif
+      - name: Run Selenium IDE tests
+        run: |
+          selenium-side-runner \
+            --base-url http://localhost:3000 \
+            --browser chrome \
+            --output-directory selenium-results \
+            selenium-tests/blog-app.side
         continue-on-error: true
 
-      - name: Setup Node.js for audit
-        uses: actions/setup-node@v4
+      - name: Upload Selenium test results
+        uses: actions/upload-artifact@v4
+        if: always()
         with:
-          node-version: '20'
-
-      - name: Install dependencies
-        run: npm install --ignore-scripts
-
-      - name: Run npm audit (dependency vulnerabilities)
-        run: npm audit --audit-level=high || true
-
-      - name: Run duplicate code check (jscpd)
-        run: npx jscpd src/ --min-lines 5 --min-tokens 50 --reporters console || true
+          name: selenium-results
+          path: selenium-results/
+          retention-days: 7

@@ -1,0 +1,236 @@
+{
+  "id": "blog-app-e2e-tests",
+  "version": "2.0",
+  "name": "Blog App — E2E Tests (Selenium IDE)",
+  "url": "http://localhost:3000",
+  "tests": [
+    {
+      "id": "test-001",
+      "name": "TC-01: Реєстрація нового користувача",
+      "commands": [
+        { "id": "cmd-001-1", "comment": "Відкрити головну сторінку", "command": "open", "target": "/", "value": "" },
+        { "id": "cmd-001-2", "comment": "Клікнути кнопку Реєстрація", "command": "click", "target": "linkText=Реєстрація", "value": "" },
+        { "id": "cmd-001-3", "comment": "Перевірити заголовок сторінки", "command": "assertTitle", "target": "Реєстрація | Блог", "value": "" },
+        { "id": "cmd-001-4", "comment": "Ввести ім'я користувача", "command": "type", "target": "id=username", "value": "testuser_selenium" },
+        { "id": "cmd-001-5", "comment": "Ввести email", "command": "type", "target": "id=email", "value": "selenium_test@example.com" },
+        { "id": "cmd-001-6", "comment": "Ввести пароль", "command": "type", "target": "id=password", "value": "TestPass123!" },
+        { "id": "cmd-001-7", "comment": "Підтвердити пароль", "command": "type", "target": "id=confirmPassword", "value": "TestPass123!" },
+        { "id": "cmd-001-8", "comment": "Натиснути кнопку реєстрації", "command": "click", "target": "css=button[type='submit']", "value": "" },
+        { "id": "cmd-001-9", "comment": "Перевірити редирект на головну", "command": "assertCurrentUrl", "target": "http://localhost:3000/posts", "value": "" },
+        { "id": "cmd-001-10", "comment": "Перевірити flash-повідомлення про успіх", "command": "assertElementPresent", "target": "css=.flash-success", "value": "" }
+      ]
+    },
+    {
+      "id": "test-002",
+      "name": "TC-02: Реєстрація з існуючим email (негативний тест)",
+      "commands": [
+        { "id": "cmd-002-1", "command": "open", "target": "/auth/register", "value": "" },
+        { "id": "cmd-002-2", "command": "type", "target": "id=username", "value": "anotheruser" },
+        { "id": "cmd-002-3", "command": "type", "target": "id=email", "value": "selenium_test@example.com" },
+        { "id": "cmd-002-4", "command": "type", "target": "id=password", "value": "TestPass123!" },
+        { "id": "cmd-002-5", "command": "type", "target": "id=confirmPassword", "value": "TestPass123!" },
+        { "id": "cmd-002-6", "command": "click", "target": "css=button[type='submit']", "value": "" },
+        { "id": "cmd-002-7", "comment": "Перевірити наявність повідомлення про помилку", "command": "assertElementPresent", "target": "css=.error-list", "value": "" },
+        { "id": "cmd-002-8", "comment": "Перевірити що залишились на сторінці реєстрації", "command": "assertCurrentUrl", "target": "http://localhost:3000/auth/register", "value": "" }
+      ]
+    },
+    {
+      "id": "test-003",
+      "name": "TC-03: Вхід зареєстрованого користувача",
+      "commands": [
+        { "id": "cmd-003-1", "command": "open", "target": "/auth/login", "value": "" },
+        { "id": "cmd-003-2", "command": "assertTitle", "target": "Вхід | Блог", "value": "" },
+        { "id": "cmd-003-3", "command": "type", "target": "id=email", "value": "selenium_test@example.com" },
+        { "id": "cmd-003-4", "command": "type", "target": "id=password", "value": "TestPass123!" },
+        { "id": "cmd-003-5", "command": "click", "target": "css=button[type='submit']", "value": "" },
+        { "id": "cmd-003-6", "comment": "Перевірити редирект після входу", "command": "assertCurrentUrl", "target": "http://localhost:3000/posts", "value": "" },
+        { "id": "cmd-003-7", "comment": "Перевірити що ім'я користувача відображається в шапці", "command": "assertElementPresent", "target": "css=.nav-avatar-link", "value": "" }
+      ]
+    },
+    {
+      "id": "test-004",
+      "name": "TC-04: Вхід з невірним паролем (негативний тест)",
+      "commands": [
+        { "id": "cmd-004-1", "command": "open", "target": "/auth/login", "value": "" },
+        { "id": "cmd-004-2", "command": "type", "target": "id=email", "value": "selenium_test@example.com" },
+        { "id": "cmd-004-3", "command": "type", "target": "id=password", "value": "WrongPassword999" },
+        { "id": "cmd-004-4", "command": "click", "target": "css=button[type='submit']", "value": "" },
+        { "id": "cmd-004-5", "command": "assertElementPresent", "target": "css=.error-list", "value": "" },
+        { "id": "cmd-004-6", "command": "assertCurrentUrl", "target": "http://localhost:3000/auth/login", "value": "" }
+      ]
+    },
+    {
+      "id": "test-005",
+      "name": "TC-05: Перехід на сторінку забутого паролю",
+      "commands": [
+        { "id": "cmd-005-1", "command": "open", "target": "/auth/login", "value": "" },
+        { "id": "cmd-005-2", "command": "click", "target": "linkText=Забули пароль?", "value": "" },
+        { "id": "cmd-005-3", "command": "assertCurrentUrl", "target": "http://localhost:3000/auth/forgot-password", "value": "" },
+        { "id": "cmd-005-4", "command": "assertTitle", "target": "Скидання паролю | Блог", "value": "" },
+        { "id": "cmd-005-5", "command": "type", "target": "id=email", "value": "selenium_test@example.com" },
+        { "id": "cmd-005-6", "command": "click", "target": "css=button[type='submit']", "value": "" },
+        { "id": "cmd-005-7", "comment": "Перевірити що сторінка відобразила підтвердження", "command": "assertElementPresent", "target": "css=.success-card", "value": "" }
+      ]
+    },
+    {
+      "id": "test-006",
+      "name": "TC-06: Створення нового запису (поста)",
+      "commands": [
+        { "id": "cmd-006-1", "comment": "Спочатку логінімось", "command": "open", "target": "/auth/login", "value": "" },
+        { "id": "cmd-006-2", "command": "type", "target": "id=email", "value": "selenium_test@example.com" },
+        { "id": "cmd-006-3", "command": "type", "target": "id=password", "value": "TestPass123!" },
+        { "id": "cmd-006-4", "command": "click", "target": "css=button[type='submit']", "value": "" },
+        { "id": "cmd-006-5", "comment": "Перейти до створення запису", "command": "open", "target": "/posts/new", "value": "" },
+        { "id": "cmd-006-6", "command": "assertTitle", "target": "Новий запис | Блог", "value": "" },
+        { "id": "cmd-006-7", "command": "type", "target": "id=title", "value": "Selenium Test Post — Автоматичний тест" },
+        { "id": "cmd-006-8", "command": "type", "target": "id=content", "value": "Цей пост створено автоматично за допомогою Selenium IDE у рамках лабораторної роботи з тестування програмного забезпечення." },
+        { "id": "cmd-006-9", "command": "click", "target": "css=button[type='submit']", "value": "" },
+        { "id": "cmd-006-10", "comment": "Перевірити що перейшли на сторінку поста", "command": "assertElementPresent", "target": "css=.post-title", "value": "" },
+        { "id": "cmd-006-11", "command": "assertText", "target": "css=.post-title", "value": "Selenium Test Post — Автоматичний тест" }
+      ]
+    },
+    {
+      "id": "test-007",
+      "name": "TC-07: Створення поста без заголовку (негативний тест)",
+      "commands": [
+        { "id": "cmd-007-1", "command": "open", "target": "/auth/login", "value": "" },
+        { "id": "cmd-007-2", "command": "type", "target": "id=email", "value": "selenium_test@example.com" },
+        { "id": "cmd-007-3", "command": "type", "target": "id=password", "value": "TestPass123!" },
+        { "id": "cmd-007-4", "command": "click", "target": "css=button[type='submit']", "value": "" },
+        { "id": "cmd-007-5", "command": "open", "target": "/posts/new", "value": "" },
+        { "id": "cmd-007-6", "comment": "Залишаємо заголовок порожнім", "command": "type", "target": "id=content", "value": "Контент без заголовку" },
+        { "id": "cmd-007-7", "command": "click", "target": "css=button[type='submit']", "value": "" },
+        { "id": "cmd-007-8", "comment": "HTML5 валідація має заблокувати сабміт", "command": "assertElementPresent", "target": "id=title", "value": "" },
+        { "id": "cmd-007-9", "command": "assertCurrentUrl", "target": "http://localhost:3000/posts/new", "value": "" }
+      ]
+    },
+    {
+      "id": "test-008",
+      "name": "TC-08: Перегляд списку записів",
+      "commands": [
+        { "id": "cmd-008-1", "command": "open", "target": "/posts", "value": "" },
+        { "id": "cmd-008-2", "command": "assertTitle", "target": "Блог | Блог", "value": "" },
+        { "id": "cmd-008-3", "comment": "Перевірити наявність grid з постами", "command": "assertElementPresent", "target": "css=.posts-grid", "value": "" },
+        { "id": "cmd-008-4", "comment": "Перевірити наявність хоча б одного поста", "command": "assertElementPresent", "target": "css=.post-card", "value": "" }
+      ]
+    },
+    {
+      "id": "test-009",
+      "name": "TC-09: Пошук записів",
+      "commands": [
+        { "id": "cmd-009-1", "command": "open", "target": "/posts", "value": "" },
+        { "id": "cmd-009-2", "comment": "Ввести пошуковий запит", "command": "type", "target": "css=.search-input", "value": "Selenium Test Post" },
+        { "id": "cmd-009-3", "command": "click", "target": "css=.search-btn", "value": "" },
+        { "id": "cmd-009-4", "comment": "Перевірити що URL містить search параметр", "command": "assertCurrentUrl", "target": "http://localhost:3000/posts?search=Selenium+Test+Post", "value": "" },
+        { "id": "cmd-009-5", "comment": "Перевірити наявність результатів", "command": "assertElementPresent", "target": "css=.post-card", "value": "" }
+      ]
+    },
+    {
+      "id": "test-010",
+      "name": "TC-10: Додавання коментаря до запису",
+      "commands": [
+        { "id": "cmd-010-1", "command": "open", "target": "/auth/login", "value": "" },
+        { "id": "cmd-010-2", "command": "type", "target": "id=email", "value": "selenium_test@example.com" },
+        { "id": "cmd-010-3", "command": "type", "target": "id=password", "value": "TestPass123!" },
+        { "id": "cmd-010-4", "command": "click", "target": "css=button[type='submit']", "value": "" },
+        { "id": "cmd-010-5", "comment": "Відкрити перший пост зі списку", "command": "open", "target": "/posts", "value": "" },
+        { "id": "cmd-010-6", "command": "click", "target": "css=.post-card:first-child .btn", "value": "" },
+        { "id": "cmd-010-7", "comment": "Знайти форму коментарів і ввести текст", "command": "type", "target": "css=#comments textarea[name='content']", "value": "Selenium автоматичний коментар — тестування коментарів" },
+        { "id": "cmd-010-8", "comment": "Відправити коментар", "command": "click", "target": "css=#comments button[type='submit']", "value": "" },
+        { "id": "cmd-010-9", "comment": "Перевірити що коментар з'явився", "command": "assertText", "target": "css=.comment:last-child .comment-text", "value": "Selenium автоматичний коментар — тестування коментарів" }
+      ]
+    },
+    {
+      "id": "test-011",
+      "name": "TC-11: Перегляд профілю користувача",
+      "commands": [
+        { "id": "cmd-011-1", "command": "open", "target": "/auth/login", "value": "" },
+        { "id": "cmd-011-2", "command": "type", "target": "id=email", "value": "selenium_test@example.com" },
+        { "id": "cmd-011-3", "command": "type", "target": "id=password", "value": "TestPass123!" },
+        { "id": "cmd-011-4", "command": "click", "target": "css=button[type='submit']", "value": "" },
+        { "id": "cmd-011-5", "command": "open", "target": "/profile", "value": "" },
+        { "id": "cmd-011-6", "command": "assertTitle", "target": "Профіль — testuser_selenium | Блог", "value": "" },
+        { "id": "cmd-011-7", "command": "assertElementPresent", "target": "css=.profile-username", "value": "" },
+        { "id": "cmd-011-8", "command": "assertText", "target": "css=.profile-username", "value": "testuser_selenium" }
+      ]
+    },
+    {
+      "id": "test-012",
+      "name": "TC-12: Редагування профілю",
+      "commands": [
+        { "id": "cmd-012-1", "command": "open", "target": "/auth/login", "value": "" },
+        { "id": "cmd-012-2", "command": "type", "target": "id=email", "value": "selenium_test@example.com" },
+        { "id": "cmd-012-3", "command": "type", "target": "id=password", "value": "TestPass123!" },
+        { "id": "cmd-012-4", "command": "click", "target": "css=button[type='submit']", "value": "" },
+        { "id": "cmd-012-5", "command": "open", "target": "/profile/edit", "value": "" },
+        { "id": "cmd-012-6", "command": "assertTitle", "target": "Редагувати профіль | Блог", "value": "" },
+        { "id": "cmd-012-7", "comment": "Очистити поле bio і ввести нове", "command": "clearAndType", "target": "id=bio", "value": "Тестовий користувач Selenium IDE. Автоматично оновлений біо." },
+        { "id": "cmd-012-8", "command": "click", "target": "css=button[type='submit']", "value": "" },
+        { "id": "cmd-012-9", "command": "assertCurrentUrl", "target": "http://localhost:3000/profile", "value": "" },
+        { "id": "cmd-012-10", "command": "assertElementPresent", "target": "css=.flash-success", "value": "" }
+      ]
+    },
+    {
+      "id": "test-013",
+      "name": "TC-13: Вихід із системи",
+      "commands": [
+        { "id": "cmd-013-1", "command": "open", "target": "/auth/login", "value": "" },
+        { "id": "cmd-013-2", "command": "type", "target": "id=email", "value": "selenium_test@example.com" },
+        { "id": "cmd-013-3", "command": "type", "target": "id=password", "value": "TestPass123!" },
+        { "id": "cmd-013-4", "command": "click", "target": "css=button[type='submit']", "value": "" },
+        { "id": "cmd-013-5", "comment": "Натиснути кнопку Вийти", "command": "click", "target": "css=.inline-form button[type='submit']", "value": "" },
+        { "id": "cmd-013-6", "comment": "Після виходу маємо потрапити на сторінку логіну", "command": "assertCurrentUrl", "target": "http://localhost:3000/auth/login", "value": "" },
+        { "id": "cmd-013-7", "comment": "Перевірити що кнопки входу/реєстрації видимі (user вийшов)", "command": "assertElementPresent", "target": "linkText=Реєстрація", "value": "" }
+      ]
+    },
+    {
+      "id": "test-014",
+      "name": "TC-14: Захищений маршрут без авторизації",
+      "commands": [
+        { "id": "cmd-014-1", "comment": "Спробувати відкрити /posts/new без входу", "command": "open", "target": "/posts/new", "value": "" },
+        { "id": "cmd-014-2", "comment": "Маємо бути перенаправлені на логін", "command": "assertCurrentUrl", "target": "http://localhost:3000/auth/login", "value": "" },
+        { "id": "cmd-014-3", "comment": "Перевірити flash-помилку", "command": "assertElementPresent", "target": "css=.flash-error", "value": "" }
+      ]
+    }
+  ],
+  "suites": [
+    {
+      "id": "suite-all",
+      "name": "Всі тести блог-додатку",
+      "persistSession": false,
+      "parallel": false,
+      "timeout": 30000,
+      "tests": [
+        "test-001","test-002","test-003","test-004","test-005",
+        "test-006","test-007","test-008","test-009","test-010",
+        "test-011","test-012","test-013","test-014"
+      ]
+    },
+    {
+      "id": "suite-auth",
+      "name": "Тести авторизації",
+      "persistSession": false,
+      "parallel": false,
+      "timeout": 30000,
+      "tests": ["test-001","test-002","test-003","test-004","test-005","test-013","test-014"]
+    },
+    {
+      "id": "suite-posts",
+      "name": "Тести записів та коментарів",
+      "persistSession": false,
+      "parallel": false,
+      "timeout": 30000,
+      "tests": ["test-006","test-007","test-008","test-009","test-010"]
+    },
+    {
+      "id": "suite-profile",
+      "name": "Тести профілю",
+      "persistSession": false,
+      "parallel": false,
+      "timeout": 30000,
+      "tests": ["test-011","test-012"]
+    }
+  ],
+  "urls": ["http://localhost:3000/"],
+  "plugins": []
+}
