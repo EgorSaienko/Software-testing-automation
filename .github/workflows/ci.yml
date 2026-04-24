@@ -7,6 +7,7 @@ on:
     branches: [ "main", "master" ]
 
 jobs:
+  # ── Job 1: Unit Tests ────────────────────────────────────────────────────
   test:
     name: Unit Tests (Jest)
     runs-on: ubuntu-latest
@@ -20,6 +21,7 @@ jobs:
         if: always()
         with: { name: jest-coverage, path: coverage/, retention-days: 7 }
 
+  # ── Job 2: Linting ───────────────────────────────────────────────────────
   lint:
     name: Code Style (ESLint)
     runs-on: ubuntu-latest
@@ -30,6 +32,7 @@ jobs:
       - run: npm install --ignore-scripts
       - run: npm run lint
 
+  # ── Job 3: Code Quality ──────────────────────────────────────────────────
   security:
     name: Code Quality & Security
     runs-on: ubuntu-latest
@@ -47,6 +50,7 @@ jobs:
       - run: npm audit --audit-level=high || true
       - run: npx jscpd src/ --min-lines 5 --min-tokens 50 --reporters console || true
 
+  # ── Job 4: Selenium IDE ──────────────────────────────────────────────────
   e2e-selenium:
     name: E2E Tests (Selenium IDE)
     runs-on: ubuntu-latest
@@ -69,6 +73,7 @@ jobs:
         if: always()
         with: { name: selenium-results, path: selenium-results/ }
 
+  # ── Job 5: Robot Framework ───────────────────────────────────────────────
   e2e-robot:
     name: Keyword-Driven Tests (Robot Framework)
     runs-on: ubuntu-latest
@@ -104,6 +109,7 @@ jobs:
         if: always()
         with: { name: robot-results, path: robot-results/, retention-days: 7 }
 
+  # ── Job 6: Selenium WebDriver (Page Object) ──────────────────────────────
   e2e-webdriver:
     name: E2E Tests (Selenium WebDriver + Page Object)
     runs-on: ubuntu-latest
@@ -141,3 +147,82 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with: { name: selenium-wd-screenshots, path: selenium-wd-tests/screenshots/, retention-days: 7 }
+
+  # ── Job 7: BDD Tests (Cucumber.js) ───────────────────────────────────────
+  e2e-bdd-cucumber:
+    name: Behavior Driven Tests (Cucumber.js)
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with: { node-version: '20', cache: 'npm' }
+      - name: Install app dependencies
+        run: |
+          npm install
+          npm rebuild better-sqlite3
+      - name: Install Cucumber dependencies
+        run: |
+          cd bdd-tests
+          npm install
+      - name: Setup Chrome
+        uses: browser-actions/setup-chrome@v1
+      - name: Setup ChromeDriver
+        uses: nanasess/setup-chromedriver@v2
+      - name: Start blog application
+        run: |
+          nohup node src/app.js &
+          sleep 3
+          curl -f http://localhost:3000 || exit 1
+        env: { PORT: 3000, SESSION_SECRET: ci-bdd-secret, NODE_ENV: test }
+      - name: Run Cucumber BDD Tests
+        run: |
+          cd bdd-tests
+          npm test
+        env: { BASE_URL: http://localhost:3000, CI: true }
+        continue-on-error: true
+      - name: Upload Cucumber JSON Report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: cucumber-report, path: bdd-tests/cucumber-report.json, retention-days: 7 }
+
+  # ── Job 8: API Tests (Newman / Postman) ──────────────────────────────────
+  api-tests:
+    name: API Tests (Postman / Newman)
+    runs-on: ubuntu-latest
+    needs: [test]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with: { node-version: '20', cache: 'npm' }
+      - name: Install app dependencies
+        run: |
+          npm install
+          npm rebuild better-sqlite3
+      - name: Install Newman
+        run: npm install -g newman newman-reporter-htmlextra
+      - name: Start blog application
+        run: |
+          nohup node src/app.js &
+          sleep 3
+          curl -f http://localhost:3000 || exit 1
+        env: { PORT: 3000, SESSION_SECRET: ci-api-test-secret, NODE_ENV: test }
+      - name: Run Postman collection via Newman
+        run: |
+          mkdir -p api-tests/reports
+          newman run api-tests/blog-app-postman-collection.json \
+            --environment api-tests/blog-app-local-environment.json \
+            --env-var "base_url=http://localhost:3000" \
+            --reporters cli,json,htmlextra \
+            --reporter-json-export api-tests/reports/newman-report.json \
+            --reporter-htmlextra-export api-tests/reports/newman-report.html \
+            --reporter-htmlextra-title "Blog App API Test Report" \
+            --delay-request 300 \
+            --timeout-request 10000
+        continue-on-error: true
+      - name: Upload API test reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: api-test-reports, path: api-tests/reports/, retention-days: 7 }
