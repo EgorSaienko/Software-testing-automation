@@ -226,3 +226,67 @@ jobs:
         uses: actions/upload-artifact@v4
         if: always()
         with: { name: api-test-reports, path: api-tests/reports/, retention-days: 7 }
+
+  # ── Job 9: Load Tests (k6) ───────────────────────────────────────────────
+  load-tests:
+    name: Load Tests (k6)
+    runs-on: ubuntu-latest
+    needs: [ unit-tests ]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install app dependencies
+        run: npm install --ignore-scripts
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring \
+            --keyring /usr/share/keyrings/k6-archive-keyring.gpg \
+            --keyserver hkp://keyserver.ubuntu.com:80 \
+            --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" \
+            | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update && sudo apt-get install -y k6
+
+      - name: Start blog application
+        run: |
+          nohup node src/app.js &
+          sleep 3
+          curl -f http://localhost:3000 || exit 1
+        env:
+          PORT: 3000
+          SESSION_SECRET: ci-k6-secret
+          NODE_ENV: test
+
+      - name: Run smoke test first
+        run: |
+          k6 run load-tests/blog-smoke-test.js \
+            --env BASE_URL=http://localhost:3000
+        continue-on-error: true
+
+      - name: Run k6 load tests
+        run: |
+          mkdir -p load-tests/results
+          k6 run load-tests/blog-load-test.js \
+            --env BASE_URL=http://localhost:3000 \
+            --env TEST_EMAIL=k6_load_test@example.com \
+            --env TEST_PASS=K6LoadPass123! \
+            --env TEST_USER=k6_load_user \
+            --out json=load-tests/results/k6-report.json \
+            --summary-export=load-tests/results/k6-summary.json
+        continue-on-error: true
+
+      - name: Upload k6 results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: k6-load-test-results
+          path: load-tests/results/
+          retention-days: 7
