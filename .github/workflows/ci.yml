@@ -231,18 +231,18 @@ jobs:
   load-tests:
     name: Load Tests (k6)
     runs-on: ubuntu-latest
-    needs: [ unit-tests ]
+    needs: [test]
     steps:
       - uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
+        with: { node-version: '20', cache: 'npm' }
 
       - name: Install app dependencies
-        run: npm install --ignore-scripts
+        run: |
+          npm install
+          npm rebuild better-sqlite3
 
       - name: Install k6
         run: |
@@ -260,10 +260,7 @@ jobs:
           nohup node src/app.js &
           sleep 3
           curl -f http://localhost:3000 || exit 1
-        env:
-          PORT: 3000
-          SESSION_SECRET: ci-k6-secret
-          NODE_ENV: test
+        env: { PORT: 3000, SESSION_SECRET: ci-k6-secret, NODE_ENV: test }
 
       - name: Run smoke test first
         run: |
